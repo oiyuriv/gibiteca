@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Gibiteca</title>
+<meta name="description" content="Sua estante de quadrinhos: leia arquivos CBZ como revista, direto no celular.">
+<meta name="theme-color" content="#16110d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Gibiteca">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></g></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-tune" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></g></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5c-3.5-.5-6.5 0-8.5 1.5zM12 6.5v13"/></g></symbol>
+  <symbol id="i-restart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.6"/><path d="M4 4v4.5h4.5"/></g></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="m13.5 6.5 4 4"/></g></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/></g></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h15l-4-4M20 16H5l4 4"/></g></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<main id="library" class="library">
+  <header class="lib-head">
+    <div class="brand">
+      <h1 class="logo">Gibiteca</h1>
+      <p class="lib-count" id="libCount">sua estante de quadrinhos</p>
+    </div>
+    <button class="icon-btn" id="btnInfo" aria-label="Sobre e armazenamento"><svg><use href="#i-info"/></svg></button>
+  </header>
+
+  <div class="lib-tools" id="libTools" hidden>
+    <label class="search">
+      <svg><use href="#i-search"/></svg>
+      <input id="search" type="search" placeholder="Buscar na estante" autocomplete="off" enterkeyhint="search">
+    </label>
+    <div class="seg" id="sortSeg">
+      <button type="button" data-sort="recent">Recentes</button>
+      <button type="button" data-sort="series">Séries</button>
+      <button type="button" data-sort="az">A–Z</button>
+    </div>
+  </div>
+
+  <section id="hero" class="hero" hidden></section>
+  <section id="shelves" class="shelves" aria-label="Estante"></section>
+
+  <section id="empty" class="empty" hidden>
+    <div class="bubble">
+      <strong>Sua estante está vazia!</strong>
+      Toque no <b class="plus-dot">+</b> para colocar seus gibis <em>.cbz</em> aqui. No celular dá pra escolher direto do Google Drive.
+    </div>
+    <div class="shelf ghost" style="--cols:3">
+      <div class="shelf-row"><span class="cv-ghost"></span><span class="cv-ghost"></span><span class="cv-ghost"></span></div>
+      <div class="shelf-board"><div class="shelf-labels"></div></div>
+    </div>
+    <div class="shelf ghost" style="--cols:3">
+      <div class="shelf-row"><span class="cv-ghost"></span><span class="cv-ghost"></span><span class="cv-ghost"></span></div>
+      <div class="shelf-board"><div class="shelf-labels"></div></div>
+    </div>
+  </section>
+
+  <p class="no-results" id="noResults" hidden>Nenhum gibi com esse nome.</p>
+</main>
+
+<button class="fab" id="btnAdd" aria-label="Adicionar gibis"><svg><use href="#i-plus"/></svg></button>
+<input type="file" id="filePick" multiple hidden>
+
+<div id="importCard" class="import-card" hidden>
+  <div class="import-line"><strong id="importName">Importando…</strong><span id="importCount"></span></div>
+  <div class="bar"><i id="importBar"></i></div>
+  <small>Deixe o app aberto até terminar.</small>
+</div>
+
+<div id="dropZone" class="drop-zone" hidden><div>Solte os .cbz aqui</div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-panel" id="sheetPanel" role="dialog" aria-modal="true"></div>
+</div>
+
+<section id="reader" class="reader ui-off" hidden aria-label="Leitor">
+  <div class="rd-surface">
+    <div class="rd-stage">
+      <div class="rd-shift">
+        <div class="rd-book">
+          <div class="rd-slot rd-l"><img alt="" draggable="false"></div>
+          <div class="rd-slot rd-r"><img alt="" draggable="false"></div>
+          <div class="rd-cast"></div>
+          <div class="rd-leaf">
+            <div class="rd-face rd-front"><img alt="" draggable="false"><i class="rd-shade"></i></div>
+            <div class="rd-face rd-back"><img alt="" draggable="false"><i class="rd-shade"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <header class="rd-top">
+    <button class="icon-btn" id="rdBack" aria-label="Voltar para a estante"><svg><use href="#i-back"/></svg></button>
+    <div class="rd-title"><strong id="rdTitle"></strong><span id="rdSub"></span></div>
+    <button class="icon-btn" id="rdMenu" aria-label="Ajustes de leitura"><svg><use href="#i-tune"/></svg></button>
+  </header>
+
+  <footer class="rd-bottom">
+    <button class="icon-btn" id="rdPrev" aria-label="Página anterior"><svg><use href="#i-left"/></svg></button>
+    <div class="rd-scrub">
+      <input type="range" id="rdRange" min="1" max="1" value="1" step="1" aria-label="Ir para a página">
+      <output id="rdBubble"></output>
+    </div>
+    <button class="icon-btn" id="rdNext" aria-label="Próxima página"><svg><use href="#i-right"/></svg></button>
+  </footer>
+
+  <div class="rd-hint" id="rdHint" hidden>
+    <div class="hint-zone"><span class="hint-ico">👈</span>Toque aqui<br>para voltar</div>
+    <div class="hint-zone mid"><span class="hint-ico">✌️</span>Pinça ou toque duplo<br>para dar zoom<br><br><span class="hint-ico">👆</span>Toque no meio<br>para o menu</div>
+    <div class="hint-zone"><span class="hint-ico">👉</span>Toque aqui<br>para avançar</div>
+    <div class="hint-foot">Ou arraste a página com o dedo, como numa revista.<button class="btn" type="button">Entendi!</button></div>
+  </div>
+
+  <div class="rd-end" id="rdEnd" hidden>
+    <div class="end-card">
+      <div class="end-title">FIM!</div>
+      <p>Você chegou à última página.</p>
+      <div class="row-btns">
+        <button class="btn ghost" type="button" data-end="again"><svg><use href="#i-restart"/></svg>Ler de novo</button>
+        <button class="btn" type="button" data-end="shelf"><svg><use href="#i-book"/></svg>Estante</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

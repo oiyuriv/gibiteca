@@ -1,4 +1,4 @@
-import { openZip, isPageName } from './zip.js';
+import { openComicArchive } from './archive.js';
 import * as db from './db.js';
 import { Reader } from './reader.js';
 
@@ -28,7 +28,7 @@ function coverURL(c) {
 /* ---------- títulos e séries ---------- */
 
 function cleanTitle(fileName) {
-  let t = fileName.replace(/\.(cbz|zip)$/i, '').replace(/[_]+/g, ' ');
+  let t = fileName.replace(/\.(cbz|cbr|zip|rar)$/i, '').replace(/[_]+/g, ' ');
   const noTags = t.replace(/\s*[([{][^)\]}]*[)\]}]/g, '').trim();
   if (noTags) t = noTags;
   return t.replace(/\s{2,}/g, ' ').trim() || fileName;
@@ -98,63 +98,73 @@ function pickAspect(list) {
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-async function importOne(file, onProgress) {
-  const zip = await openZip(file);
-  const pages = zip.entries
-    .filter(e => !e.dir && e.uncomp > 0 && isPageName(e.name))
-    .sort((a, b) => collator.compare(a.name, b.name));
-  if (!pages.length) throw new Error('não achei nenhuma página (imagem) dentro do arquivo');
-  if (pages.some(e => e.encrypted)) throw new Error('o arquivo está protegido por senha');
-
+// título, série e sentido de leitura: do ComicInfo.xml quando existe, senão do nome do arquivo
+function metaFrom(fileName, xml) {
   let info = {};
-  const ci = zip.entries.find(e => /(^|\/)comicinfo\.xml$/i.test(e.name));
-  if (ci) { try { info = parseComicInfo(await (await zip.read(ci)).text()); } catch { /* ignora */ } }
-
-  const fileTitle = cleanTitle(file.name);
-  const title = info.series ? info.series + (info.number ? ` #${info.number}` : '') : (info.title || fileTitle);
+  if (xml) { try { info = parseComicInfo(xml); } catch { /* ignora */ } }
+  const title = info.series ? info.series + (info.number ? ` #${info.number}` : '') : (info.title || cleanTitle(fileName));
   const guess = guessSeries(title);
-  const comic = {
-    id: uid(),
+  return {
     title,
     subtitle: info.series && info.title ? info.title : '',
     series: info.series || guess.series,
     number: info.number ? parseFloat(String(info.number).replace(',', '.')) : guess.number,
     writer: info.writer || '',
     year: info.year || '',
+    rtl: !!info.manga,
+  };
+}
+
+async function importOne(file, onProgress) {
+  const src = await openComicArchive(file, collator.compare);
+  if (!src.count) throw new Error('não achei nenhuma página (imagem) dentro do arquivo');
+  if (src.encrypted) throw new Error('o arquivo está protegido por senha');
+
+  const comic = {
+    id: uid(),
+    ...metaFrom(file.name, src.info()),
     fileName: file.name,
+    format: src.kind,
     size: file.size,
-    pageCount: pages.length,
+    pageCount: src.count,
     addedAt: Date.now(),
     lastReadAt: 0,
     lastPage: 0,
     finished: false,
-    rtl: !!info.manga,
     aspect: 0.66,
     status: 'importing',
   };
   await db.putComic(comic);
 
-  const aspects = [];
-  const sample = new Set([1, 2, Math.floor(pages.length / 2)]);
-  let bytes = 0;
-  for (let i = 0; i < pages.length; i++) {
-    const blob = await zip.read(pages[i]);
-    bytes += blob.size;
-    await db.putPage(comic.id, i, blob);
-    if (i === 0) {
-      const { thumb, aspect } = await makeThumb(blob);
-      comic.cover = thumb;
-      aspects.push(aspect);
-    } else if (sample.has(i)) {
-      aspects.push(await measure(blob));
+  try {
+    const aspects = [];
+    const sample = new Set([1, 2, Math.floor(src.count / 2)]);
+    let bytes = 0;
+    let done = 0;
+    for await (const { index, blob } of src.pages()) {
+      bytes += blob.size;
+      await db.putPage(comic.id, index, blob);
+      if (index === 0) {
+        const { thumb, aspect } = await makeThumb(blob);
+        comic.cover = thumb;
+        aspects.push(aspect);
+      } else if (sample.has(index)) {
+        aspects.push(await measure(blob));
+      }
+      onProgress(++done, src.count);
     }
-    onProgress(i + 1, pages.length);
+    if (done < src.count || !comic.cover) throw new Error('algumas páginas não puderam ser lidas');
+    // no CBR o ComicInfo.xml só aparece durante a extração
+    if (src.kind === 'cbr' && src.info()) Object.assign(comic, metaFrom(file.name, src.info()));
+    comic.aspect = pickAspect(aspects);
+    comic.bytes = bytes;
+    comic.status = 'ready';
+    await db.putComic(comic);
+    return comic;
+  } catch (err) {
+    await db.deleteComic(comic.id).catch(() => {});
+    throw err;
   }
-  comic.aspect = pickAspect(aspects);
-  comic.bytes = bytes;
-  comic.status = 'ready';
-  await db.putComic(comic);
-  return comic;
 }
 
 let importing = false;
@@ -182,8 +192,6 @@ async function importFiles(fileList) {
     $('#importCount').textContent = 'abrindo…';
     $('#importBar').style.width = '0%';
     try {
-      if (/\.(cbr|rar)$/i.test(f.name)) throw new Error('arquivos .cbr (RAR) ainda não são aceitos — só .cbz');
-      if (/\.pdf$/i.test(f.name)) throw new Error('PDF não é aceito — só .cbz');
       if (state.comics.some(c => c.fileName === f.name && c.size === f.size)) {
         toast(`"${title}" já está na estante`);
         continue;
@@ -494,7 +502,7 @@ async function infoSheet() {
       ${standalone ? '' : `<p><b>Importante no iPhone:</b> no Safari, toque em Compartilhar → <b>Adicionar à Tela de Início</b> e abra sempre pelo ícone. Assim o iPhone não apaga sua estante.</p>`}
       ${persisted ? '<p class="muted">✓ Armazenamento protegido contra limpeza automática.</p>' : ''}
       <ul class="tips">
-        <li>Toque no <b>+</b> e escolha os .cbz (no iPhone: “Escolher Arquivo” → Google Drive).</li>
+        <li>Toque no <b>+</b> e escolha os .cbz ou .cbr (no iPhone: “Escolher Arquivo” → Google Drive).</li>
         <li>Segure uma capa para renomear, mudar o sentido (mangá) ou tirar da estante.</li>
         <li>No gibi: toque nas bordas ou arraste para virar; pinça ou toque duplo para zoom.</li>
         <li>Deite o celular para ver a revista aberta, com duas páginas.</li>

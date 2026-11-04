@@ -1,7 +1,7 @@
 {
   "name": "Gibiteca",
   "short_name": "Gibiteca",
-  "description": "Sua estante de quadrinhos: leia arquivos CBZ como revista.",
+  "description": "Sua estante de quadrinhos: leia arquivos CBZ e CBR como revista.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",

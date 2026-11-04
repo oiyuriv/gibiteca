@@ -218,9 +218,10 @@ export class Reader {
 
   layout() {
     if (!this.isOpen) return;
-    const W = this.surface.clientWidth;
-    const H = this.surface.clientHeight;
-    if (!W || !H) return;
+    // se a tela ainda não tem tamanho (janela minimizada etc.), usa um tamanho provisório;
+    // o evento de resize refaz o layout quando o tamanho real aparecer
+    const W = this.surface.clientWidth || window.innerWidth || 360;
+    const H = this.surface.clientHeight || window.innerHeight || 640;
     const mode = this.o.prefs.mode;
     const dbl = mode === 'double' || (mode === 'auto' && W > H * 1.05 && W >= 560);
     const page = this.currentPage();

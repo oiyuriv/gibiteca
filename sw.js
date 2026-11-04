@@ -1,9 +1,12 @@
 // Gibiteca: abre na hora com a cópia guardada e atualiza em segundo plano.
 // Os gibis em si ficam no IndexedDB, não aqui.
-const CACHE = 'gibiteca-v1';
+const CACHE = 'gibiteca-v2';
 const ASSETS = [
   './', './index.html', './css/app.css',
-  './js/app.js', './js/reader.js', './js/zip.js', './js/db.js',
+  './js/app.js', './js/reader.js', './js/zip.js', './js/db.js', './js/archive.js',
+  './js/vendor/unrar/index.js', './js/vendor/unrar/js/Extractor.js', './js/vendor/unrar/js/ExtractorData.js',
+  './js/vendor/unrar/js/ExtractorData.helper.js', './js/vendor/unrar/js/unrar.js', './js/vendor/unrar/js/unrar.singleton.js',
+  './js/vendor/unrar/js/unrar.wasm',
   './manifest.webmanifest', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png',
 ];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];

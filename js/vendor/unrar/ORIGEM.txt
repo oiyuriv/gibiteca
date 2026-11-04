@@ -1,0 +1,3 @@
+node-unrar-js 2.0.2 (MIT) — https://github.com/YuJianrong/node-unrar.js
+Copiado de cdn.jsdelivr.net/npm/node-unrar-js@2.0.2/esm em 04/11/2026.
+Único ajuste: imports com extensão .js para rodar direto no navegador.
